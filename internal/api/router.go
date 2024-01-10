@@ -4,9 +4,11 @@ import "github.com/go-chi/chi"
 
 func NewRouter() *chi.Mux {
 	api_router := NewApiCorsRouter()
-	router := chi.NewRouter()
 
-	api_router.Mount("/v1", router)
+	v1Router := chi.NewRouter()
+	v1Router.Get("/readiness", ReadinessHandler)
+	v1Router.Get("/err", ErrHandler)
 
+	api_router.Mount("/v1", v1Router)
 	return api_router
 }
