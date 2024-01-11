@@ -1,9 +1,14 @@
 package api
 
 import (
+	"github.com/SilverLuhtoja/blog_aggregator/internal/database"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 )
+
+type ApiConfig struct {
+	DB *database.Queries
+}
 
 func NewApiCorsRouter() *chi.Mux {
 	router := chi.NewRouter()

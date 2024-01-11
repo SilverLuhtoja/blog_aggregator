@@ -25,7 +25,7 @@ func RespondWithError(w http.ResponseWriter, code int, err string) {
 	RespondWithJSON(w, code, map[string]string{"error": fmt.Sprintf("%+v", err)})
 }
 
-func GetParamsFromRequest[T interface{}](structBody T, r *http.Request) (T, error) {
+func GetParamsFromRequestBody[T interface{}](structBody T, r *http.Request) (T, error) {
 	decoder := json.NewDecoder(r.Body)
 
 	params := structBody
