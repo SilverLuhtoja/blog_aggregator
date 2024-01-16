@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/SilverLuhtoja/blog_aggregator/internal/auth"
 	"github.com/SilverLuhtoja/blog_aggregator/internal/database"
 	"github.com/SilverLuhtoja/blog_aggregator/internal/models"
 	"github.com/google/uuid"
@@ -40,19 +39,6 @@ func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	RespondWithJSON(w, http.StatusCreated, models.DatabaseUserToUser(user))
 }
 
-func (cfg *ApiConfig) GetUserByApiKey(w http.ResponseWriter, r *http.Request) {
-	key, err := auth.GetApiKey(r.Header)
-	if err != nil {
-		RespondWithError(w, http.StatusUnauthorized, err.Error())
-		return
-	}
-
-	user, err := cfg.DB.GetUserByApiKey(r.Context(), key)
-	if err != nil {
-		fmt.Println(err)
-		RespondWithError(w, http.StatusInternalServerError, "getUserByApiKey - couldn't find user")
-		return
-	}
-
-	RespondWithJSON(w, http.StatusCreated, models.DatabaseUserToUser(user))
+func (cfg *ApiConfig) GetUserHandler(w http.ResponseWriter, r *http.Request, user database.User) {
+	RespondWithJSON(w, http.StatusOK, models.DatabaseUserToUser(user))
 }
