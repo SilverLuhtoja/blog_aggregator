@@ -1,7 +1,9 @@
 package api
 
 import (
+	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -64,4 +66,61 @@ func (cfg *ApiConfig) GetAllFeedsHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	RespondWithJSON(w, http.StatusCreated, feeds)
+}
+
+// RSS struct represents the root structure of the RSS feed
+type RSS struct {
+	XMLName xml.Name `xml:"rss"`
+	Channel Channel  `xml:"channel"`
+}
+
+// Channel struct represents the channel element in the RSS feed
+type Channel struct {
+	Title         string `xml:"title"`
+	Link          string `xml:"link"`
+	Description   string `xml:"description"`
+	Generator     string `xml:"generator"`
+	Language      string `xml:"language"`
+	LastBuildDate string `xml:"lastBuildDate"`
+}
+
+func (cfg *ApiConfig) FetchFeedData(w http.ResponseWriter, r *http.Request, user database.User) {
+	feeds, err := cfg.DB.GetNextFeedsToFetch(r.Context())
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	client := http.Client{}
+
+	feed := feeds[0]
+	res, err := client.Get(feed.Url)
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	body, readErr := io.ReadAll(res.Body)
+	defer res.Body.Close()
+	if readErr != nil {
+		RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	data := RSS{}
+	jsonErr := xml.Unmarshal(body, &data)
+	if jsonErr != nil {
+		RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = cfg.DB.MarkFeedFetched(r.Context(), database.MarkFeedFetchedParams{
+		UpdatedAt: time.Now(),
+		ID:        feed.ID})
+
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	RespondWithJSON(w, 200, data)
 }
