@@ -21,6 +21,8 @@ func NewRouter(cfg *ApiConfig) *chi.Mux {
 	v1Router.Post("/feed_follows", cfg.middlewareAuth(cfg.CreateFeedFollow))
 	v1Router.Delete("/feed_follows/{feedFollowID}", cfg.DeleteFeedFollowById)
 
+	v1Router.Get("/posts", cfg.middlewareAuth(cfg.GetPostsByUser))
+
 	api_router.Mount("/v1", v1Router)
 	return api_router
 }

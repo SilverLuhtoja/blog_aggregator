@@ -23,7 +23,7 @@ func main() {
 		log.Fatal("Couldn't connect to database")
 	}
 	dbQueries := database.New(db)
-	apiConfig := &api.ApiConfig{DB: dbQueries}
+	apiConfig := &api.ApiConfig{DB: dbQueries, Client: &http.Client{}}
 
 	r := api.NewRouter(apiConfig)
 	server := &http.Server{
@@ -31,6 +31,10 @@ func main() {
 		Handler:     r,
 		ReadTimeout: 5 * time.Second,
 	}
+
+	go func() {
+		apiConfig.FeedWorker()
+	}()
 
 	log.Printf("Server running on: http://%s/v1\n", server.Addr)
 	log.Fatal(server.ListenAndServe())
